@@ -4,3 +4,4 @@ nvidia-ml-py3
 ftfy
 --extra-index-url https://download.pytorch.org/whl/cu113 
 torch
+python-dotenv

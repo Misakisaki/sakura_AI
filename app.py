@@ -7,6 +7,8 @@ from datasets import load_dataset
 from PIL import Image  
 import re
 
+from share_btn import community_icon_html, loading_icon_html, share_js
+
 model_id = "CompVis/stable-diffusion-v1-4"
 device = "cuda"
 
@@ -40,7 +42,8 @@ def infer(prompt, samples, steps, scale, seed):
             images.append(safe_image)
         else:
             images.append(image)
-    return images
+    return images, gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
+    
     
 css = """
         .gradio-container {
@@ -125,6 +128,38 @@ css = """
             font-weight: bold;
             font-size: 115%;
         }
+        #container-advanced-btns{
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #share-btn-container {
+            display: flex; padding-left: 0.5rem !important; padding-right: 0.5rem !important; background-color: #000000; justify-content: center; align-items: center; border-radius: 9999px !important; width: 13rem;
+        }
+        #share-btn {
+            all: initial; color: #ffffff;font-weight: 600; cursor:pointer; font-family: 'IBM Plex Sans', sans-serif; margin-left: 0.5rem !important; padding-top: 0.25rem !important; padding-bottom: 0.25rem !important;
+        }
+        #share-btn * {
+            all: unset;
+        }
+        .gr-form{
+            flex: 1 1 50%; border-top-right-radius: 0; border-bottom-right-radius: 0;
+        }
+        #prompt-container{
+            gap: 0;
+        }
 """
 
 block = gr.Blocks(css=css)
@@ -166,6 +201,7 @@ examples = [
         1024,
     ],
 ]
+
 
 with block:
     gr.HTML(
@@ -232,12 +268,13 @@ with block:
     )
     with gr.Group():
         with gr.Box():
-            with gr.Row().style(mobile_collapse=False, equal_height=True):
+            with gr.Row(elem_id="prompt-container").style(mobile_collapse=False, equal_height=True):
                 text = gr.Textbox(
                     label="Enter your prompt",
                     show_label=False,
                     max_lines=1,
                     placeholder="Enter your prompt",
+                    elem_id="prompt-text-input",
                 ).style(
                     border=(True, False, True, True),
                     rounded=(True, False, False, True),
@@ -246,13 +283,19 @@ with block:
                 btn = gr.Button("Generate image").style(
                     margin=False,
                     rounded=(False, True, True, False),
+                    full_width=False,
                 )
 
         gallery = gr.Gallery(
             label="Generated images", show_label=False, elem_id="gallery"
         ).style(grid=[2], height="auto")
 
-        advanced_button = gr.Button("Advanced options", elem_id="advanced-btn")
+        with gr.Group(elem_id="container-advanced-btns"):
+            advanced_button = gr.Button("Advanced options", elem_id="advanced-btn")
+            with gr.Group(elem_id="share-btn-container"):
+                community_icon = gr.HTML(community_icon_html, visible=False)
+                loading_icon = gr.HTML(loading_icon_html, visible=False)
+                share_button = gr.Button("Share to community", elem_id="share-btn", visible=False)
 
         with gr.Row(elem_id="advanced-options"):
             samples = gr.Slider(label="Images", minimum=1, maximum=4, value=4, step=1)
@@ -268,12 +311,14 @@ with block:
                 randomize=True,
             )
 
-        ex = gr.Examples(examples=examples, fn=infer, inputs=[text, samples, steps, scale, seed], outputs=gallery, cache_examples=True)
+        ex = gr.Examples(examples=examples, fn=infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=True)
         ex.dataset.headers = [""]
 
         
-        text.submit(infer, inputs=[text, samples, steps, scale, seed], outputs=gallery)
-        btn.click(infer, inputs=[text, samples, steps, scale, seed], outputs=gallery)
+        text.submit(infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button])
+        
+        btn.click(infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button])
+        
         advanced_button.click(
             None,
             [],
@@ -283,6 +328,12 @@ with block:
                 const options = document.querySelector("body > gradio-app").querySelector("#advanced-options");
                 options.style.display = ["none", ""].includes(options.style.display) ? "flex" : "none";
             }""",
+        )
+        share_button.click(
+            None,
+            [],
+            [],
+            _js=share_js,
         )
         gr.HTML(
             """
