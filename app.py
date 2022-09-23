@@ -5,7 +5,11 @@ from torch import autocast
 from diffusers import StableDiffusionPipeline
 from datasets import load_dataset
 from PIL import Image  
+from io import BytesIO
+import base64
 import re
+import os
+import requests
 
 from share_btn import community_icon_html, loading_icon_html, share_js
 
@@ -21,27 +25,44 @@ torch.backends.cudnn.benchmark = True
 word_list_dataset = load_dataset("stabilityai/word-list", data_files="list.txt", use_auth_token=True)
 word_list = word_list_dataset["train"]['text']
 
-def infer(prompt, samples, steps, scale, seed):
+is_gpu_busy = False
+def infer(prompt):
+    global is_gpu_busy
+    samples = 4
+    steps = 50
+    scale = 7.5
     #When running locally you can also remove this filter
     for filter in word_list:
         if re.search(rf"\b{filter}\b", prompt):
             raise gr.Error("Unsafe content found. Please try again with different prompts.")
         
-    generator = torch.Generator(device=device).manual_seed(seed)
-    
-    images_list = pipe(
-        [prompt] * samples,
-        num_inference_steps=steps,
-        guidance_scale=scale,
-        generator=generator,
-    )
+    #generator = torch.Generator(device=device).manual_seed(seed)
+    print("Is GPU busy? ", is_gpu_busy)
     images = []
-    safe_image = Image.open(r"unsafe.png")
-    for i, image in enumerate(images_list["sample"]):
-        if(images_list["nsfw_content_detected"][i]):
-            images.append(safe_image)
-        else:
-            images.append(image)
+    if(not is_gpu_busy):
+        is_gpu_busy = True
+        images_list = pipe(
+            [prompt] * samples,
+            num_inference_steps=steps,
+            guidance_scale=scale,
+            #generator=generator,
+        )
+        is_gpu_busy = False
+        safe_image = Image.open(r"unsafe.png")
+        for i, image in enumerate(images_list["sample"]):
+            if(images_list["nsfw_content_detected"][i]):
+                images.append(safe_image)
+            else:
+                images.append(image)
+    else:
+        url = os.getenv('JAX_BACKEND_URL')
+        payload = {'prompt': prompt}
+        images_request = requests.post(url, json = payload)
+        for image in images_request.json()["images"]:
+            image_decoded = Image.open(BytesIO(base64.b64decode(image)))
+            images.append(image_decoded)
+    
+    
     return images, gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
     
     
@@ -298,6 +319,7 @@ with block:
                 share_button = gr.Button("Share to community", elem_id="share-btn", visible=False)
 
         with gr.Row(elem_id="advanced-options"):
+            gr.Markdown("Advanced settings are temporarily unavailable")
             samples = gr.Slider(label="Images", minimum=1, maximum=4, value=4, step=1)
             steps = gr.Slider(label="Steps", minimum=1, maximum=50, value=45, step=1)
             scale = gr.Slider(
@@ -311,13 +333,13 @@ with block:
                 randomize=True,
             )
 
-        ex = gr.Examples(examples=examples, fn=infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=True)
+        ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=True)
         ex.dataset.headers = [""]
 
         
-        text.submit(infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button])
+        text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button])
         
-        btn.click(infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button])
+        btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button])
         
         advanced_button.click(
             None,
@@ -350,4 +372,4 @@ Despite how impressive being able to turn text into image is, beware to the fact
            """
         )
 
-block.queue(max_size=25).launch()
+block.queue(max_size=25, concurrency_count=2).launch()
