@@ -331,12 +331,12 @@ with block:
                 randomize=True,
             )
 
-        ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
+        ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=True)
         ex.dataset.headers = [""]
 
         
-        text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], _postprocess=False)
-        btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], _postprocess=False)
+        text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], postprocess=False)
+        btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], postprocess=False)
         
         advanced_button.click(
             None,
