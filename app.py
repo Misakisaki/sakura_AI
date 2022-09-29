@@ -313,9 +313,9 @@ with block:
         with gr.Group(elem_id="container-advanced-btns"):
             advanced_button = gr.Button("Advanced options", elem_id="advanced-btn")
             with gr.Group(elem_id="share-btn-container"):
-                community_icon = gr.HTML(community_icon_html, visible=True)
-                loading_icon = gr.HTML(loading_icon_html, visible=True)
-                share_button = gr.Button("Share to community", elem_id="share-btn", visible=True)
+                community_icon = gr.HTML(community_icon_html, visible=False)
+                loading_icon = gr.HTML(loading_icon_html, visible=False)
+                share_button = gr.Button("Share to community", elem_id="share-btn", visible=False)
 
         with gr.Row(elem_id="advanced-options"):
             gr.Markdown("Advanced settings are temporarily unavailable")
