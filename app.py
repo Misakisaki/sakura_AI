@@ -1,12 +1,11 @@
 import gradio as gr
-
-import torch
-from torch import autocast
-from diffusers import StableDiffusionPipeline
+#import torch
+#from torch import autocast
+#from diffusers import StableDiffusionPipeline
 from datasets import load_dataset
 from PIL import Image  
-from io import BytesIO
-import base64
+#from io import BytesIO
+#import base64
 import re
 import os
 import requests
@@ -59,9 +58,8 @@ def infer(prompt):
     payload = {'prompt': prompt}
     images_request = requests.post(url, json = payload)
     for image in images_request.json()["images"]:
-        image_decoded = Image.open(BytesIO(base64.b64decode(image)))
-        images.append(image_decoded)
-    
+        image_b64 = (f"data:image/png;base64,{image}")
+        images.append(image_b64)
     
     return images, gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
     
@@ -337,9 +335,8 @@ with block:
         ex.dataset.headers = [""]
 
         
-        text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button])
-        
-        btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button])
+        text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], _postprocess=False)
+        btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], _postprocess=False)
         
         advanced_button.click(
             None,
