@@ -10,6 +10,7 @@ import re
 import os
 import requests
 
+
 from share_btn import community_icon_html, loading_icon_html, share_js
 
 model_id = "CompVis/stable-diffusion-v1-4"
@@ -312,9 +313,9 @@ with block:
         with gr.Group(elem_id="container-advanced-btns"):
             advanced_button = gr.Button("Advanced options", elem_id="advanced-btn")
             with gr.Group(elem_id="share-btn-container"):
-                community_icon = gr.HTML(community_icon_html, visible=False)
-                loading_icon = gr.HTML(loading_icon_html, visible=False)
-                share_button = gr.Button("Share to community", elem_id="share-btn", visible=False)
+                community_icon = gr.HTML(community_icon_html, visible=True)
+                loading_icon = gr.HTML(loading_icon_html, visible=True)
+                share_button = gr.Button("Share to community", elem_id="share-btn", visible=True)
 
         with gr.Row(elem_id="advanced-options"):
             gr.Markdown("Advanced settings are temporarily unavailable")
@@ -368,4 +369,4 @@ Despite how impressive being able to turn text into image is, beware to the fact
            """
         )
 
-block.queue(max_size=20, concurrency_count=20).launch()
+block.queue(max_size=50, concurrency_count=20).launch()
