@@ -186,38 +186,38 @@ block = gr.Blocks(css=css)
 examples = [
     [
         'A high tech solarpunk utopia in the Amazon rainforest',
-        4,
-        45,
-        7.5,
-        1024,
+#        4,
+#        45,
+#        7.5,
+#        1024,
     ],
     [
         'A pikachu fine dining with a view to the Eiffel Tower',
-        4,
-        45,
-        7,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
     [
         'A mecha robot in a favela in expressionist style',
-        4,
-        45,
-        7,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
     [
         'an insect robot preparing a delicious meal',
-        4,
-        45,
-        7,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
     [
         "A small cabin on top of a snowy mountain in the style of Disney, artstation",
-        4,
-        45,
-        7,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
 ]
 
@@ -334,7 +334,6 @@ with block:
         ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
         ex.dataset.headers = [""]
 
-        
         text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], postprocess=False)
         btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], postprocess=False)
         
