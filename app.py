@@ -62,7 +62,7 @@ def infer(prompt):
         image_b64 = (f"data:image/png;base64,{image}")
         images.append(image_b64)
     
-    return images, gr.update(visible=True), gr.update(visible=True), gr.update(visible=True)
+    return images
     
     
 css = """
@@ -335,8 +335,8 @@ with block:
         ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
         ex.dataset.headers = [""]
 
-        text.submit(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], postprocess=False)
-        btn.click(infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], postprocess=False)
+        text.submit(infer, inputs=text, outputs=[gallery], postprocess=False)
+        btn.click(infer, inputs=text, outputs=[gallery], postprocess=False)
         
         advanced_button.click(
             None,
