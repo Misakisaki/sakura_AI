@@ -59,7 +59,7 @@ def infer(prompt):
     payload = {'prompt': prompt}
     images_request = requests.post(url, json = payload)
     for image in images_request.json()["images"]:
-        image_b64 = (f"data:image/png;base64,{image}")
+        image_b64 = (f"data:image/jpeg;base64,{image}")
         images.append(image_b64)
     
     return images
@@ -313,9 +313,9 @@ with block:
         with gr.Group(elem_id="container-advanced-btns"):
             advanced_button = gr.Button("Advanced options", elem_id="advanced-btn")
             with gr.Group(elem_id="share-btn-container"):
-                community_icon = gr.HTML(community_icon_html, visible=False)
-                loading_icon = gr.HTML(loading_icon_html, visible=False)
-                share_button = gr.Button("Share to community", elem_id="share-btn", visible=False)
+                community_icon = gr.HTML(community_icon_html)
+                loading_icon = gr.HTML(loading_icon_html)
+                share_button = gr.Button("Share to community", elem_id="share-btn")
 
         with gr.Row(elem_id="advanced-options"):
             gr.Markdown("Advanced settings are temporarily unavailable")
