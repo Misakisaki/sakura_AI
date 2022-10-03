@@ -369,4 +369,4 @@ Despite how impressive being able to turn text into image is, beware to the fact
            """
         )
 
-block.launch()
+block.queue(default_enabled=False).launch()
