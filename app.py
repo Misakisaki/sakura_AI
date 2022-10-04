@@ -369,4 +369,4 @@ Despite how impressive being able to turn text into image is, beware to the fact
            """
         )
 
-block.queue(default_enabled=False).launch()
+block.queue(concurrency_count=40, max_size=20).launch(max_threads=150)
