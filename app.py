@@ -274,7 +274,7 @@ with block:
               </div>
               <p style="margin-bottom: 10px; font-size: 94%">
                 Stable Diffusion is a state of the art text-to-image model that generates
-                images from text.<br>For faster generation and forthcoming API
+                images from text.<br>For faster generation and API
                 access you can try
                 <a
                   href="http://beta.dreamstudio.ai/"
@@ -357,7 +357,7 @@ with block:
         gr.HTML(
             """
                 <div class="footer">
-                    <p>Model by <a href="https://huggingface.co/CompVis" style="text-decoration: underline;" target="_blank">CompVis</a> and <a href="https://huggingface.co/stabilityai" style="text-decoration: underline;" target="_blank">Stability AI</a> - Gradio Demo by 🤗 Hugging Face
+                    <p>Model by <a href="https://huggingface.co/CompVis" style="text-decoration: underline;" target="_blank">CompVis</a> and <a href="https://huggingface.co/stabilityai" style="text-decoration: underline;" target="_blank">Stability AI</a> - backend running JAX on TPUs due to generous support of <a href="https://sites.research.google/trc/about/" style="text-decoration: underline;" target="_blank">Google TRC program</a> - Gradio Demo by 🤗 Hugging Face
                     </p>
                 </div>
                 <div class="acknowledgments">
