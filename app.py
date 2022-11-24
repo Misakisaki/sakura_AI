@@ -390,6 +390,8 @@ css = """
         }
         #share-btn-container {
             display: flex; padding-left: 0.5rem !important; padding-right: 0.5rem !important; background-color: #000000; justify-content: center; align-items: center; border-radius: 9999px !important; width: 13rem;
+            margin-top: 10px;
+            margin-left: auto;
         }
         #share-btn {
             all: initial; color: #ffffff;font-weight: 600; cursor:pointer; font-family: 'IBM Plex Sans', sans-serif; margin-left: 0.5rem !important; padding-top: 0.25rem !important; padding-bottom: 0.25rem !important;right:0;
@@ -410,6 +412,7 @@ css = """
         #prompt-container{
             gap: 0;
         }
+        #component-14{border-top-width: 1px !important}
 """
 
 block = gr.Blocks(css=css)
@@ -538,11 +541,7 @@ with block:
             label="Generated images", show_label=False, elem_id="gallery"
         ).style(grid=[2], height="auto")
 
-        with gr.Group():
-            with gr.Group(elem_id="share-btn-container"):
-                community_icon = gr.HTML(community_icon_html)
-                loading_icon = gr.HTML(loading_icon_html)
-                share_button = gr.Button("Share to community", elem_id="share-btn")
+        
 
         with gr.Accordion("Custom options", open=False):
             samples = gr.Slider(label="Images", minimum=1, maximum=4, value=4, step=1)
@@ -557,6 +556,12 @@ with block:
                 step=1,
                 randomize=True,
             )
+
+        with gr.Group():
+            with gr.Group(elem_id="share-btn-container"):
+                community_icon = gr.HTML(community_icon_html)
+                loading_icon = gr.HTML(loading_icon_html)
+                share_button = gr.Button("Share to community", elem_id="share-btn")
 
         ex = gr.Examples(examples=examples, fn=infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
         ex.dataset.headers = [""]
