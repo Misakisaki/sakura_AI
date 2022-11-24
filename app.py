@@ -29,15 +29,17 @@ pipe = DiffusionPipeline.from_pretrained(repo_id, torch_dtype=torch.float16, rev
 pipe = pipe.to(device)
 pipe.enable_xformers_memory_efficient_attention()
 
-#If you have duplicated this Space or is running locally, you can remove this part
-word_list_dataset = load_dataset("stabilityai/word-list", data_files="list.txt", use_auth_token=True)
-word_list = word_list_dataset["train"]['text']
-
+#If you have duplicated this Space or is running locally, you can remove this snippet
+if "HUGGING_FACE_HUB_TOKEN" in os.environ:
+    word_list_dataset = load_dataset("stabilityai/word-list", data_files="list.txt", use_auth_token=True)
+    word_list = word_list_dataset["train"]['text']
+    
 def infer(prompt, samples, steps, scale, seed):
-    #If you have duplicated this Space or is running locally, you can remove this part
-    for filter in word_list:
-        if re.search(rf"\b{filter}\b", prompt):
-            raise gr.Error("Unsafe content found. Please try again with different prompts.")
+    #If you have duplicated this Space or is running locally, you can remove this snippet
+    if "HUGGING_FACE_HUB_TOKEN" in os.environ:
+        for filter in word_list:
+            if re.search(rf"\b{filter}\b", prompt):
+                raise gr.Error("Unsafe content found. Please try again with different prompts.")
     generator = torch.Generator(device=device).manual_seed(seed)
     images = pipe(prompt, width=768, height=768, num_inference_steps=steps, guidance_scale=scale, num_images_per_prompt=samples, generator=generator).images
     images_watermarked = []
