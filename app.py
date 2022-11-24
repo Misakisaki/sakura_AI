@@ -1,6 +1,7 @@
 import gradio as gr
 import cv2
 import torch
+import os
 from imwatermark import WatermarkEncoder
 import numpy as np
 from PIL import Image
