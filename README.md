@@ -1,12 +1,10 @@
 ---
-title: Stable Diffusion
-emoji: 🏃
-colorFrom: red
-colorTo: red
-sdk: gradio
-sdk_version: 3.4b2
-app_file: app.py
-pinned: false
+title: Stable Diffusion 2
+emoji: 🔮
+colorFrom: gray
+colorTo: pink
+sdk: static
+pinned: true
 license: mit
 ---
 
