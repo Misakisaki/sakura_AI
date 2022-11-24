@@ -1,9 +1,11 @@
 ---
 title: Stable Diffusion 2
-emoji: 🔮
-colorFrom: gray
-colorTo: pink
-sdk: static
+emoji: 🔥
+colorFrom: yellow
+colorTo: gray
+sdk: gradio
+sdk_version: 3.11.0
+app_file: app.py
 pinned: true
 license: mit
 ---
