@@ -1,53 +1,37 @@
 import gradio as gr
-import cv2
-import torch
-import os
-from imwatermark import WatermarkEncoder
-import numpy as np
-from PIL import Image
-import re
 from datasets import load_dataset
-from diffusers import DiffusionPipeline, EulerDiscreteScheduler
+from PIL import Image  
+
+import re
+import os
+import requests
+
 
 from share_btn import community_icon_html, loading_icon_html, share_js
 
-REPO_ID = "stabilityai/stable-diffusion-2"
-device = "cuda" if torch.cuda.is_available() else "cpu"
+word_list_dataset = load_dataset("stabilityai/word-list", data_files="list.txt", use_auth_token=True)
+word_list = word_list_dataset["train"]['text']
 
-wm = "SDV2"
-wm_encoder = WatermarkEncoder()
-wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
-def put_watermark(img, wm_encoder=None):
-    if wm_encoder is not None:
-        img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        img = wm_encoder.encode(img, 'dwtDct')
-        img = Image.fromarray(img[:, :, ::-1])
-    return img
-
-repo_id = "stabilityai/stable-diffusion-2"
-scheduler = EulerDiscreteScheduler.from_pretrained(repo_id, subfolder="scheduler", prediction_type="v_prediction")
-pipe = DiffusionPipeline.from_pretrained(repo_id, torch_dtype=torch.float16, revision="fp16", scheduler=scheduler)
-pipe = pipe.to(device)
-pipe.enable_xformers_memory_efficient_attention()
-
-#If you have duplicated this Space or is running locally, you can remove this snippet
-if "HUGGING_FACE_HUB_TOKEN" in os.environ:
-    word_list_dataset = load_dataset("stabilityai/word-list", data_files="list.txt", use_auth_token=True)
-    word_list = word_list_dataset["train"]['text']
+is_gpu_busy = False
+def infer(prompt):
+    global is_gpu_busy
+    samples = 4
+    steps = 50
+    scale = 7.5
+    for filter in word_list:
+        if re.search(rf"\b{filter}\b", prompt):
+            raise gr.Error("Unsafe content found. Please try again with different prompts.")
+        
+    images = []
+    url = os.getenv('JAX_BACKEND_URL')
+    payload = {'prompt': prompt}
+    images_request = requests.post(url, json = payload)
+    for image in images_request.json()["images"]:
+        image_b64 = (f"data:image/jpeg;base64,{image}")
+        images.append(image_b64)
     
-def infer(prompt, samples, steps, scale, seed):
-    #If you have duplicated this Space or is running locally, you can remove this snippet
-    if "HUGGING_FACE_HUB_TOKEN" in os.environ:
-        for filter in word_list:
-            if re.search(rf"\b{filter}\b", prompt):
-                raise gr.Error("Unsafe content found. Please try again with different prompts.")
-    generator = torch.Generator(device=device).manual_seed(seed)
-    images = pipe(prompt, width=768, height=768, num_inference_steps=steps, guidance_scale=scale, num_images_per_prompt=samples, generator=generator).images
-    images_watermarked = []
-    for image in images:
-        image = put_watermark(image, wm_encoder)
-        images_watermarked.append(image)
-    return images_watermarked
+    return images
+    
     
 css = """
         .gradio-container {
@@ -176,40 +160,41 @@ block = gr.Blocks(css=css)
 examples = [
     [
         'A high tech solarpunk utopia in the Amazon rainforest',
-        4,
-        25,
-        9,
-        1024,
+#        4,
+#        45,
+#        7.5,
+#        1024,
     ],
     [
         'A pikachu fine dining with a view to the Eiffel Tower',
-        4,
-        25,
-        9,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
     [
         'A mecha robot in a favela in expressionist style',
-        4,
-        25,
-        9,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
     [
         'an insect robot preparing a delicious meal',
-        4,
-        25,
-        9,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
     [
         "A small cabin on top of a snowy mountain in the style of Disney, artstation",
-        4,
-        25,
-        9,
-        1024,
+#        4,
+#        45,
+#        7,
+#        1024,
     ],
 ]
+
 
 with block:
     gr.HTML(
@@ -297,34 +282,44 @@ with block:
             label="Generated images", show_label=False, elem_id="gallery"
         ).style(grid=[2], height="auto")
 
-        
-
-        with gr.Accordion("Custom options", open=False):
-            samples = gr.Slider(label="Images", minimum=1, maximum=4, value=4, step=1)
-            steps = gr.Slider(label="Steps", minimum=1, maximum=50, value=25, step=1)
-            scale = gr.Slider(
-                label="Guidance Scale", minimum=0, maximum=50, value=9, step=0.1
-            )
-            seed = gr.Slider(
-                label="Seed",
-                minimum=0,
-                maximum=2147483647,
-                step=1,
-                randomize=True,
-            )
-
-        with gr.Group():
+        with gr.Group(elem_id="container-advanced-btns"):
+            #advanced_button = gr.Button("Advanced options", elem_id="advanced-btn")
             with gr.Group(elem_id="share-btn-container"):
                 community_icon = gr.HTML(community_icon_html)
                 loading_icon = gr.HTML(loading_icon_html)
                 share_button = gr.Button("Share to community", elem_id="share-btn")
 
-        ex = gr.Examples(examples=examples, fn=infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery], cache_examples=False)
+        #with gr.Row(elem_id="advanced-options"):
+        #    gr.Markdown("Advanced settings are temporarily unavailable")
+        #    samples = gr.Slider(label="Images", minimum=1, maximum=4, value=4, step=1)
+        #    steps = gr.Slider(label="Steps", minimum=1, maximum=50, value=45, step=1)
+        #    scale = gr.Slider(
+        #        label="Guidance Scale", minimum=0, maximum=50, value=7.5, step=0.1
+        #    )
+        #    seed = gr.Slider(
+        #        label="Seed",
+        #        minimum=0,
+        #        maximum=2147483647,
+        #        step=1,
+        #        randomize=True,
+        #    )
+
+        ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
         ex.dataset.headers = [""]
 
-        text.submit(infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery])
-        btn.click(infer, inputs=[text, samples, steps, scale, seed], outputs=[gallery])
+        text.submit(infer, inputs=text, outputs=[gallery], postprocess=False)
+        btn.click(infer, inputs=text, outputs=[gallery], postprocess=False)
         
+        #advanced_button.click(
+        #    None,
+        #    [],
+        #    text,
+        #    _js="""
+        #    () => {
+        #        const options = document.querySelector("body > gradio-app").querySelector("#advanced-options");
+        #        options.style.display = ["none", ""].includes(options.style.display) ? "flex" : "none";
+        #    }""",
+        #)
         share_button.click(
             None,
             [],
@@ -334,7 +329,7 @@ with block:
         gr.HTML(
             """
                 <div class="footer">
-                    <p>Model by <a href="https://huggingface.co/stabilityai" style="text-decoration: underline;" target="_blank">Stability AI</a> - Gradio Demo by 🤗 Hugging Face using the <a href="https://github.com/huggingface/diffusers" style="text-decoration: underline;" target="_blank">🧨 diffusers library</a>
+                    <p>Model by <a href="https://huggingface.co/stabilityai" style="text-decoration: underline;" target="_blank">StabilityAI</a> - backend running JAX on TPUs due to generous support of <a href="https://sites.research.google/trc/about/" style="text-decoration: underline;" target="_blank">Google TRC program</a> - Gradio Demo by 🤗 Hugging Face
                     </p>
                 </div>
                 <div class="acknowledgments">
@@ -346,4 +341,4 @@ Despite how impressive being able to turn text into image is, beware to the fact
            """
         )
 
-block.queue(concurrency_count=1, max_size=50).launch(max_threads=150)
+block.queue(concurrency_count=24, max_size=40).launch(max_threads=150)
