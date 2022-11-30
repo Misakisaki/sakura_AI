@@ -39,8 +39,8 @@ share_js = """async () => {
             const res = await fetch(imgEl.src);
             const blob = await res.blob();
             const imgId = Date.now() % 200;
-            const fileName = `diffuse-the-rest-${{imgId}}.png`;
-            return new File([blob], fileName, { type: 'image/png' });
+            const fileName = `diffuse-the-rest-${{imgId}}.jpg`;
+            return new File([blob], fileName, { type: 'image/jpeg' });
         })
     );
     const urls = await Promise.all(files.map((f) => uploadFile(f)));
