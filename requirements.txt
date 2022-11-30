@@ -1,10 +1,1 @@
---extra-index-url https://download.pytorch.org/whl/cu113
-torch==1.13.0
-torchvision
-git+https://github.com/huggingface/diffusers.git@30f6f44
-transformers
-accelerate
-ftfy
 python-dotenv
-invisible-watermark
-https://github.com/apolinario/xformers/releases/download/0.0.3/xformers-0.0.14.dev0-cp38-cp38-linux_x86_64.whl
