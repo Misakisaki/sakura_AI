@@ -6,25 +6,21 @@ import re
 import os
 import requests
 
-
 from share_btn import community_icon_html, loading_icon_html, share_js
 
 word_list_dataset = load_dataset("stabilityai/word-list", data_files="list.txt", use_auth_token=True)
 word_list = word_list_dataset["train"]['text']
 
 is_gpu_busy = False
-def infer(prompt):
+def infer(prompt, negative, scale):
     global is_gpu_busy
-    samples = 4
-    steps = 50
-    scale = 7.5
     for filter in word_list:
         if re.search(rf"\b{filter}\b", prompt):
             raise gr.Error("Unsafe content found. Please try again with different prompts.")
         
     images = []
     url = os.getenv('JAX_BACKEND_URL')
-    payload = {'prompt': prompt}
+    payload = {'prompt': prompt, 'negative_prompt': negative, 'guidance_scale': scale}
     images_request = requests.post(url, json = payload)
     for image in images_request.json()["images"]:
         image_b64 = (f"data:image/jpeg;base64,{image}")
@@ -145,13 +141,15 @@ css = """
         #share-btn-container .wrap {
             display: none !important;
         }
+        
         .gr-form{
             flex: 1 1 50%; border-top-right-radius: 0; border-bottom-right-radius: 0;
         }
         #prompt-container{
             gap: 0;
         }
-        #component-9{margin-top: -19px}
+        #prompt-text-input, #negative-prompt-text-input{padding: .45rem 0.625rem}
+        #component-16{border-top-width: 1px!important;margin-top: 1em}
         .image_duplication{position: absolute; width: 100px; left: 50px}
 """
 
@@ -160,38 +158,28 @@ block = gr.Blocks(css=css)
 examples = [
     [
         'A high tech solarpunk utopia in the Amazon rainforest',
-#        4,
-#        45,
-#        7.5,
-#        1024,
+        'low quality',
+        9
     ],
     [
         'A pikachu fine dining with a view to the Eiffel Tower',
-#        4,
-#        45,
-#        7,
-#        1024,
+        'low quality',
+        9
     ],
     [
         'A mecha robot in a favela in expressionist style',
-#        4,
-#        45,
-#        7,
-#        1024,
+        'low quality, 3d, photorealistic',
+        9
     ],
     [
         'an insect robot preparing a delicious meal',
-#        4,
-#        45,
-#        7,
-#        1024,
+        'low quality, illustration',
+        9
     ],
     [
         "A small cabin on top of a snowy mountain in the style of Disney, artstation",
-#        4,
-#        45,
-#        7,
-#        1024,
+        'low quality, ugly',
+        9
     ],
 ]
 
@@ -242,11 +230,11 @@ with block:
                   <rect x="23" y="69" width="23" height="23" fill="black"></rect>
                 </svg>
                 <h1 style="font-weight: 900; margin-bottom: 7px;">
-                  Stable Diffusion 2 Demo
+                  Stable Diffusion 2.1 Demo
                 </h1>
               </div>
               <p style="margin-bottom: 10px; font-size: 94%; line-height: 23px;">
-                Stable Diffusion 2 is the latest text-to-image model from StabilityAI. <a style="text-decoration: underline;" href="https://huggingface.co/spaces/stabilityai/stable-diffusion-1">Access Stable Diffusion 1 Space here</a><br>For faster generation and API
+                Stable Diffusion 2.1 is the latest text-to-image model from StabilityAI. <a style="text-decoration: underline;" href="https://huggingface.co/spaces/stabilityai/stable-diffusion-1">Access Stable Diffusion 1 Space here</a><br>For faster generation and API
                 access you can try
                 <a
                   href="http://beta.dreamstudio.ai/"
@@ -261,17 +249,29 @@ with block:
     with gr.Group():
         with gr.Box():
             with gr.Row(elem_id="prompt-container").style(mobile_collapse=False, equal_height=True):
-                text = gr.Textbox(
-                    label="Enter your prompt",
-                    show_label=False,
-                    max_lines=1,
-                    placeholder="Enter your prompt",
-                    elem_id="prompt-text-input",
-                ).style(
-                    border=(True, False, True, True),
-                    rounded=(True, False, False, True),
-                    container=False,
-                )
+                with gr.Column():
+                    text = gr.Textbox(
+                        label="Enter your prompt",
+                        show_label=False,
+                        max_lines=1,
+                        placeholder="Enter your prompt",
+                        elem_id="prompt-text-input",
+                    ).style(
+                        border=(True, False, True, True),
+                        rounded=(True, False, False, True),
+                        container=False,
+                    )
+                    negative = gr.Textbox(
+                        label="Enter your negative prompt",
+                        show_label=False,
+                        max_lines=1,
+                        placeholder="Enter a negative prompt",
+                        elem_id="negative-prompt-text-input",
+                    ).style(
+                        border=(True, False, True, True),
+                        rounded=(True, False, False, True),
+                        container=False,
+                    )
                 btn = gr.Button("Generate image").style(
                     margin=False,
                     rounded=(False, True, True, False),
@@ -289,13 +289,13 @@ with block:
                 loading_icon = gr.HTML(loading_icon_html)
                 share_button = gr.Button("Share to community", elem_id="share-btn")
 
-        #with gr.Row(elem_id="advanced-options"):
+        with gr.Accordion("Advanced settings", open=False):
         #    gr.Markdown("Advanced settings are temporarily unavailable")
         #    samples = gr.Slider(label="Images", minimum=1, maximum=4, value=4, step=1)
         #    steps = gr.Slider(label="Steps", minimum=1, maximum=50, value=45, step=1)
-        #    scale = gr.Slider(
-        #        label="Guidance Scale", minimum=0, maximum=50, value=7.5, step=0.1
-        #    )
+             guidance_scale = gr.Slider(
+                label="Guidance Scale", minimum=0, maximum=50, value=9, step=0.1
+             )
         #    seed = gr.Slider(
         #        label="Seed",
         #        minimum=0,
@@ -304,11 +304,11 @@ with block:
         #        randomize=True,
         #    )
 
-        ex = gr.Examples(examples=examples, fn=infer, inputs=text, outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
+        ex = gr.Examples(examples=examples, fn=infer, inputs=[text, negative, guidance_scale], outputs=[gallery, community_icon, loading_icon, share_button], cache_examples=False)
         ex.dataset.headers = [""]
-
-        text.submit(infer, inputs=text, outputs=[gallery], postprocess=False)
-        btn.click(infer, inputs=text, outputs=[gallery], postprocess=False)
+        negative.submit(infer, inputs=[text, negative, guidance_scale], outputs=[gallery], postprocess=False)
+        text.submit(infer, inputs=[text, negative, guidance_scale], outputs=[gallery], postprocess=False)
+        btn.click(infer, inputs=[text, negative, guidance_scale], outputs=[gallery], postprocess=False)
         
         #advanced_button.click(
         #    None,
