@@ -229,7 +229,7 @@ with block:
                   <rect x="23" y="115" width="23" height="23" fill="#AEAEAE"></rect>
                   <rect x="23" y="69" width="23" height="23" fill="black"></rect>
                 </svg>
-                <h1 style="font-weight: 900; margin-bottom: 7px;">
+                <h1 style="font-weight: 900; margin-bottom: 7px;margin-top:5px">
                   Stable Diffusion 2.1 Demo
                 </h1>
               </div>
