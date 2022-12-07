@@ -1,5 +1,5 @@
 ---
-title: Stable Diffusion 2
+title: Stable Diffusion 2-1
 emoji: 🔥
 colorFrom: yellow
 colorTo: gray
